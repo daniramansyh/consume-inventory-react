@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { API_URL } from '../../constant'
 import axios from 'axios'
 import Modal from '../../components/Modal'
+import * as XLSX from "xlsx";
+import { saveAs } from 'file-saver'
 
 const useAuth = () => {
     const navigate = useNavigate()
@@ -24,7 +26,7 @@ const InboundIndex = () => {
     })
     const { handleUnauthorized } = useAuth()
     const [isModalOpen, setModalOpen] = useState(false)
-    const [selectedImage, setSelectedImage] = useState('')  
+    const [selectedImage, setSelectedImage] = useState('')
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false)
     const [selectedInbound, setSelectedInbound] = useState(null)
 
@@ -45,9 +47,9 @@ const InboundIndex = () => {
     }, [])
 
     const handleDelete = (inbound) => {
-            axios.delete(`${API_URL}/inbound-stuffs/${inbound.id}`)
+        axios.delete(`${API_URL}/inbound-stuffs/${inbound.id}`)
             .then(res => {
-                setState(prev => ({...prev, alert: 'Successfully deleted inbound', error: null }))
+                setState(prev => ({ ...prev, alert: 'Successfully deleted inbound', error: null }))
                 fetchInbound()
                 setDeleteModalOpen(false)
             })
@@ -60,6 +62,32 @@ const InboundIndex = () => {
     const openDeleteModal = (inbound) => {
         setSelectedInbound(inbound)
         setDeleteModalOpen(true)
+    }
+
+    function exportExcel() {
+        const formattedData = inbounds.map((item, index) => ({
+            No: index + 1,
+            StuffName: item.stuff.name,
+            Total: item.total,
+            ProofFile: item.proof_file,
+            Date: new Date(item.created_at).toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            }),
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(formattedData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet 1");
+        const excelBuffer = XLSX.write(workbook, {
+            bookType: "xlsx",
+            type: "array"
+        });
+        const file = new Blob([excelBuffer], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        });
+        saveAs(file, "data_inbound.xlsx");
     }
 
     if (!state.isLoaded) {
@@ -78,6 +106,12 @@ const InboundIndex = () => {
             {state.error && <div className="alert alert-danger my-3 me-3">{state.error.message}</div>}
 
             <div className="container mt-4">
+                <div className="d-flex justify-content-end mb-4">
+                    <button className='btn btn-success me-3' onClick={exportExcel}>
+                        Export Excel
+                    </button>
+                </div>
+
                 <div className="card">
                     <table className="table table-striped table-hover table-bordered">
                         <thead>

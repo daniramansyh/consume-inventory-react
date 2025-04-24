@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { API_URL } from '../../constant'
 import axios from 'axios'
 import Modal from '../../components/Modal'
+import * as XLSX from "xlsx";
+import { saveAs } from 'file-saver'
 
 const useAuth = () => {
     const navigate = useNavigate()
@@ -36,6 +38,7 @@ const StuffIndex = () => {
     })
     const [isModalInboundOpen, setModalInboundOpen] = useState(false)
     const [inboundError, setInboundError] = useState(null)
+    const [selectedQuery, setSelectedQuery] = useState(null)
 
     const fetchStuffs = () => {
         axios.get(`${API_URL}/stuffs`)
@@ -126,6 +129,28 @@ const StuffIndex = () => {
             })
     }
 
+    function exportExcel() {
+        const formattedData = stuffs.map((item, index) => ({
+            No: index + 1,
+            Title: item.name,
+            Type: item.type,
+            TotalAvailable: item.stuff_stock ? item.stuff_stock.total_available : 0,
+            TotalDefect: item.stuff_stock ? item.stuff_stock.total_defec : 0,
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(formattedData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet 1");
+        const excelBuffer = XLSX.write(workbook, {
+            bookType: "xlsx",
+            type: "array"
+        });
+        const file = new Blob([excelBuffer], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        });
+        saveAs(file, "data_stuff.xlsx");
+    }
+
     if (!state.isLoaded) {
         return (
             <div className="d-flex justify-content-center">
@@ -142,6 +167,9 @@ const StuffIndex = () => {
 
             <div className="container mt-4">
                 <div className="d-flex justify-content-end mb-4">
+                    <button className='btn btn-success me-3' onClick={exportExcel}>
+                        Export Excel
+                    </button>
                     <button className="btn btn-primary" onClick={() => handleAction('add')}>
                         <i className="bi bi-plus-circle me-2"></i>Add New Category
                     </button>
