@@ -20,6 +20,7 @@ const useAuth = () => {
 const StuffIndex = () => {
     const [stuffs, setStuffs] = useState([])
     const [formData, setFormData] = useState({ name: '', type: '' })
+    const [searchQuery, setSearchQuery] = useState('')
     const [state, setState] = useState({
         error: null,
         isLoaded: false,
@@ -38,7 +39,6 @@ const StuffIndex = () => {
     })
     const [isModalInboundOpen, setModalInboundOpen] = useState(false)
     const [inboundError, setInboundError] = useState(null)
-    const [selectedQuery, setSelectedQuery] = useState(null)
 
     const fetchStuffs = () => {
         axios.get(`${API_URL}/stuffs`)
@@ -55,6 +55,11 @@ const StuffIndex = () => {
     useEffect(() => {
         fetchStuffs()
     })
+
+    const filteredStuffs = stuffs.filter(stuff => 
+        stuff.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        stuff.id.toString().includes(searchQuery)
+    )
 
     const closeModal = () => {
         setFormData({ name: '', type: '' })
@@ -166,13 +171,24 @@ const StuffIndex = () => {
             {state.alert && <div className="alert alert-success my-3 me-3">{state.alert}</div>}
 
             <div className="container mt-4">
-                <div className="d-flex justify-content-end mb-4">
-                    <button className='btn btn-success me-3' onClick={exportExcel}>
-                        Export Excel
-                    </button>
-                    <button className="btn btn-primary" onClick={() => handleAction('add')}>
-                        <i className="bi bi-plus-circle me-2"></i>Add New Category
-                    </button>
+                <div className="d-flex justify-content-between mb-4">
+                    <div className="search-container">
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search by name or ID..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <button className='btn btn-success me-3' onClick={exportExcel}>
+                            Export Excel
+                        </button>
+                        <button className="btn btn-primary" onClick={() => handleAction('add')}>
+                            <i className="bi bi-plus-circle me-2"></i>Add New Category
+                        </button>
+                    </div>
                 </div>
 
                 <div className="card">
@@ -192,9 +208,9 @@ const StuffIndex = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {stuffs.length === 0 ? (
+                                {filteredStuffs.length === 0 ? (
                                     <tr><td colSpan="6" className="text-center">No categories found</td></tr>
-                                ) : stuffs.map((stuff, index) => (
+                                ) : filteredStuffs.map((stuff, index) => (
                                     <tr key={stuff.id}>
                                         <td>{index + 1}</td>
                                         <td>{stuff.name}</td>

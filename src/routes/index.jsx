@@ -1,39 +1,63 @@
-import { createBrowserRouter } from "react-router-dom";
-import App from "../App";
-import Login from "../pages/Login";
-import Profile from "../pages/Profile";
-import Template from "../layouts/Template";
+import { createBrowserRouter, Navigate } from "react-router-dom";
+import Template from "../layouts/template";
 import Dashboard from "../pages/Dashboard";
-import PrivatePage from "../pages/middleware/PrivatePage";
-import GuestPage from "../pages/middleware/GuestPage";
-import StuffIndex from "../pages/stuffs/index";
-import InboundIndex from "../pages/inbounds/index";
+import StuffIndex from "../pages/stuffs/Index";
+import InboundIndex from "../pages/inbounds/Index";
+import Login from "../pages/Login";
+import ProfilePage from "../pages/Profile"
+import AdminRoute from "../pages/middleware/AdminRoute";
+import StaffRoute from "../pages/middleware/StaffRoute";
+import { Lendings } from "../pages/lendings";
+import Data from "../pages/lendings/Data";
+
+const PrivateRoute = ({ children }) => {
+  const isAuthenticated = localStorage.getItem("access_token") !== null;
+  return isAuthenticated ? children : <Navigate to="/login" />;
+};
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Template />,
+    element: <Navigate to="/login" />
+  },
+  {
+    path: "/login",
+    element: <Login />
+  },
+  {
+    path: "/dashboard",
+    element: <PrivateRoute><Template /></PrivateRoute>,
     children: [
-      { 
-        path: "/", 
-        element: <App /> 
-      },
-      { 
-        path: "/login", 
-        element: <GuestPage />,
-        children : [
-          {path: "/login", element: <Login />},
-        ] 
+      {
+        index: true,
+        element: <Dashboard />
       },
       {
-        element: <PrivatePage />,
+        path: "profile",
+        element: <ProfilePage />
+      },
+      {
+        path: "admin",
+        element: <AdminRoute />,
         children: [
-          { path: "profile", element: <Profile /> },
-          { path: "dashboard", element: <Dashboard />},
-          { path: "stuffs", element: <StuffIndex /> },
-          { path: "inbounds", element: <InboundIndex /> }, 
+          {
+            path: "stuff",
+            element: <StuffIndex />
+          },
+          {
+            path: "inbound",
+            element: <InboundIndex />
+          }
+        ]
+      },
+      {
+        path: "staff",
+        element: <StaffRoute />,
+        children: [
+          { path: "lending", element: <Lendings />},
+          { path: "lending/data", element: <Data />}
         ]
       }
-    ],
-  },
+    ]
+  }
 ]);

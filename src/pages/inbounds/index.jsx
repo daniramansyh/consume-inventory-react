@@ -19,6 +19,7 @@ const useAuth = () => {
 
 const InboundIndex = () => {
     const [inbounds, setInbounds] = useState([])
+    const [searchTerm, setSearchTerm] = useState('')
     const [state, setState] = useState({
         alert: '',
         isLoaded: false,
@@ -70,7 +71,7 @@ const InboundIndex = () => {
             StuffName: item.stuff.name,
             Total: item.total,
             ProofFile: item.proof_file,
-            Date: new Date(item.created_at).toLocaleDateString('en-GB', {
+            Date: new Date(item.created_at).toLocaleDateString('id', {
                 day: 'numeric',
                 month: 'long',
                 year: 'numeric'
@@ -90,6 +91,10 @@ const InboundIndex = () => {
         saveAs(file, "data_inbound.xlsx");
     }
 
+    const filteredInbounds = inbounds.filter(inbound =>
+        inbound.stuff.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+
     if (!state.isLoaded) {
         return (
             <div className="d-flex justify-content-center">
@@ -106,8 +111,17 @@ const InboundIndex = () => {
             {state.error && <div className="alert alert-danger my-3 me-3">{state.error.message}</div>}
 
             <div className="container mt-4">
-                <div className="d-flex justify-content-end mb-4">
-                    <button className='btn btn-success me-3' onClick={exportExcel}>
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                    <div className="w-25">
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search by name..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <button className='btn btn-success' onClick={exportExcel}>
                         Export Excel
                     </button>
                 </div>
@@ -126,9 +140,9 @@ const InboundIndex = () => {
                         <tbody>
                             {!state.isLoaded ? (
                                 <tr><td colSpan="4" className="text-center">Loading...</td></tr>
-                            ) : inbounds.length === 0 ? (
+                            ) : filteredInbounds.length === 0 ? (
                                 <tr><td colSpan="4" className="text-center">No inbounds found</td></tr>
-                            ) : inbounds.map((inbound, index) => (
+                            ) : filteredInbounds.map((inbound, index) => (
                                 <tr key={inbound.id}>
                                     <td>{index + 1}</td>
                                     <td>{inbound.stuff.name}</td>

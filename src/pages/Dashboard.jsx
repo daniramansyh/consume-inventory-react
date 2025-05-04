@@ -1,85 +1,110 @@
-import React from 'react';
-import { FaUser, FaChartBar, FaCalendar, FaClipboardList } from 'react-icons/fa';
+import { useState, useEffect } from 'react'
 
-export default function Dashboard() {
-    return (
-        <div className="container-fluid min-vh-100 bg-light py-5">
-            <div className="row g-4">
-                <div className="col-12 col-md-6 col-xl-3">
-                    <div className="card h-100 border-0 shadow-sm hover-shadow transition">
-                        <div className="card-body">
-                            <div className="d-flex align-items-center">
-                                <div className="rounded-circle bg-primary p-3 me-3">
-                                    <FaUser className="text-white fs-4" />
-                                </div>
-                                <div>
-                                    <h6 className="mb-1">Total Users</h6>
-                                    <h3 className="mb-0">1,234</h3>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+function Dashboard() {
+  const [inventoryStats, setInventoryStats] = useState({
+    totalItems: 0,
+    lowStock: 0,
+    outOfStock: 0,
+    recentTransactions: []
+  })
 
-                <div className="col-12 col-md-6 col-xl-3">
-                    <div className="card h-100 border-0 shadow-sm hover-shadow transition">
-                        <div className="card-body">
-                            <div className="d-flex align-items-center">
-                                <div className="rounded-circle bg-success p-3 me-3">
-                                    <FaChartBar className="text-white fs-4" />
-                                </div>
-                                <div>
-                                    <h6 className="mb-1">Revenue</h6>
-                                    <h3 className="mb-0">$45.2K</h3>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+  const fetchStuffs = () => {
+    axios.get(`${API_URL}/stuffs`)
+      .then(res => {
+        setStuffs(res.data.data)
+        setState(prev => ({ ...prev, isLoaded: true }))
+      })
+      .catch(err => {
+        err.response?.status === 401 ? handleUnauthorized() :
+          setState(prev => ({ ...prev, error: err.response?.data || { message: "Failed to fetch data." } }))
+      })
+  }
+  const fetchInbound = () => {
+    axios.get(`${API_URL}/inbound-stuffs`)
+      .then(res => {
+        setInbounds(res.data.data)
+        setState(prev => ({ ...prev, isLoaded: true }))
+      })
+      .catch(err => {
+        err.response?.status === 401 ? handleUnauthorized() :
+          setState(prev => ({ ...prev, error: err.response?.data || { message: "Failed to fetch data." } }))
+      })
+  }
 
-                <div className="col-12 col-md-6 col-xl-3">
-                    <div className="card h-100 border-0 shadow-sm hover-shadow transition">
-                        <div className="card-body">
-                            <div className="d-flex align-items-center">
-                                <div className="rounded-circle bg-warning p-3 me-3">
-                                    <FaCalendar className="text-white fs-4" />
-                                </div>
-                                <div>
-                                    <h6 className="mb-1">Events</h6>
-                                    <h3 className="mb-0">28</h3>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+  useEffect(() => {
+    setInventoryStats({
+      totalItems: 156,
+      lowStock: 12,
+      outOfStock: 3,
+      recentTransactions: [
+        { id: 1, item: "Laptop", quantity: 5, type: "incoming", date: "2023-12-01" },
+        { id: 2, item: "Mouse", quantity: 10, type: "outgoing", date: "2023-12-02" },
+        { id: 3, item: "Keyboard", quantity: 8, type: "incoming", date: "2023-12-03" }
+      ]
+    })
+  }, [])
 
-                <div className="col-12 col-md-6 col-xl-3">
-                    <div className="card h-100 border-0 shadow-sm hover-shadow transition">
-                        <div className="card-body">
-                            <div className="d-flex align-items-center">
-                                <div className="rounded-circle bg-danger p-3 me-3">
-                                    <FaClipboardList className="text-white fs-4" />
-                                </div>
-                                <div>
-                                    <h6 className="mb-1">Tasks</h6>
-                                    <h3 className="mb-0">145</h3>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+  return (
+    <div className="container py-4">
+      <header className="text-center mb-5">
+        <h1 className="display-4">Inventory Management Dashboard</h1>
+        <p className="lead">Real-time inventory monitoring system</p>
+      </header>
 
-                <div className="col-12">
-                    <div className="card border-0 shadow-sm">
-                        <div className="card-body p-4">
-                            <h4 className="card-title mb-4">Welcome to Dashboard</h4>
-                            <p className="card-text">
-                                Track your business metrics, analyze trends, and make data-driven decisions with our comprehensive dashboard. Monitor key performance indicators and stay updated with real-time statistics.
-                            </p>
-                        </div>
-                    </div>
-                </div>
+      <div className="row mb-4">
+        <div className="col-md-4">
+          <div className="card text-center bg-primary text-white">
+            <div className="card-body">
+              <h3 className="card-title">Total Items</h3>
+              <p className="display-6">{inventoryStats.totalItems}</p>
             </div>
+          </div>
         </div>
-    );
+        <div className="col-md-4">
+          <div className="card text-center bg-warning text-dark">
+            <div className="card-body">
+              <h3 className="card-title">Low Stock Items</h3>
+              <p className="display-6">{inventoryStats.lowStock}</p>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-4">
+          <div className="card text-center bg-danger text-white">
+            <div className="card-body">
+              <h3 className="card-title">Out of Stock</h3>
+              <p className="display-6">{inventoryStats.outOfStock}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card mb-4">
+        <div className="card-header">
+          <h2 className="h4 mb-0">Recent Transactions</h2>
+        </div>
+        <div className="card-body">
+          <div className="list-group">
+            {inventoryStats.recentTransactions.map(transaction => (
+              <div key={transaction.id} className="list-group-item d-flex justify-content-between align-items-center">
+                <span className="fw-bold">{transaction.item}</span>
+                <span className={`badge ${transaction.type === 'incoming' ? 'bg-success' : 'bg-danger'}`}>
+                  {transaction.type}
+                </span>
+                <span>Qty: {transaction.quantity}</span>
+                <span className="text-muted">{transaction.date}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="d-grid gap-2 d-md-flex justify-content-md-center">
+        <button className="btn btn-primary">Add New Item</button>
+        <button className="btn btn-secondary">Generate Report</button>
+        <button className="btn btn-info">View All Items</button>
+      </div>
+    </div>
+  )
 }
+
+export default Dashboard
